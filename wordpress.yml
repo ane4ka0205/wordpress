@@ -1,0 +1,58 @@
+---
+- name: Download wordpress
+  hosts: r1soft
+  tasks:
+    - name: Download package
+      when: ansible_distribution == "CentOS"
+      get_url:
+        url: https://wordpress.org/latest.tar.gz
+        dest: /tmp/latest.tar.gz
+
+
+    - name: Install httpd
+      when: ansible_distribution == "CentOS"
+      package:
+        name: "{{ item }}"
+      with_items:
+        - httpd
+        - php
+        - telnet
+        - php-mysql
+      nofity:
+        - APAHCERESTART6
+        - APACHERESTART7
+
+
+    - name: Unarchive the package
+      when: ansible_distribution == "CentOS"
+      unarchive:
+        src: /tmp/latest.tar.gz
+        dest: /var/www/html/
+        remote_src: yes
+
+
+
+
+    - name: Move wordpress folder
+      when: ansible_distribution == "CentOS"
+      shell: "mv /var/www/html/wordpress/*  /var/www/html/"
+      ignore_errors: true
+
+
+  handlers:
+    - name: APACHERESTART6
+      when: ( anisble_distribution == "CentOS" ansible_distribution_major_version == "6" )
+      service:
+        name: httpd
+        state: restarted
+      ignore_errors: true
+
+
+
+    - name: APACHERESTART7
+      when: ( ansible_disribution == "CentOS" ansible_distribution_major_version == "7" )
+      systemd:
+        name : httpd
+        state: restarted
+      ignore_errors: true
+~
